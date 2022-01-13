@@ -1,0 +1,28 @@
+version: '3.7'
+services:
+    postgres:
+        image: postgres:14.0
+        environment:
+          - POSTGRES_USER=postgres
+          - POSTGRES_PASSWORD=mysecretpassword
+        logging:
+          options:
+            max-size: 10m
+            max-file: "3"
+        ports:
+          - 5432:5432
+        volumes: 
+          - ./sql/create_databases.sql:/docker-entrypoint-initdb.d/create_databases.sql
+    app:
+        image: qbixer/yourshelfy-backend
+        depends_on:
+          - postgres
+        ports:
+          - 8080:8080
+        environment:
+          - DBURL=jdbc:postgresql://postgres:5432/yourshelfy
+          - DBUSER=postgres
+          - DBPASS=mysecretpassword
+          
+volumes:
+    yourshelfy-backend:
