@@ -13,6 +13,7 @@ public class UserCredentialsDTO {
 
     String email;
     String password;
+
     String phone;
     String firstname;
     String surname;
