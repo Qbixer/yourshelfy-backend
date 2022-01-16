@@ -11,10 +11,10 @@ import java.util.Objects;
 @NoArgsConstructor
 @AllArgsConstructor
 @Embeddable
-public class ShelfProductId implements Serializable {
+public class CategoryProductId implements Serializable {
 
-    @Column(name = "shelf_id")
-    Integer shelfId;
+    @Column(name = "category_id")
+    Integer categoryId;
 
     @Column(name = "product_id")
     Integer productId;
@@ -26,13 +26,13 @@ public class ShelfProductId implements Serializable {
         if (o == null || getClass() != o.getClass())
             return false;
 
-        ShelfProductId that = (ShelfProductId) o;
-        return Objects.equals(shelfId, that.shelfId) &&
+        CategoryProductId that = (CategoryProductId) o;
+        return Objects.equals(categoryId, that.categoryId) &&
                 Objects.equals(productId, that.productId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(shelfId, productId);
+        return Objects.hash(categoryId, productId);
     }
 }

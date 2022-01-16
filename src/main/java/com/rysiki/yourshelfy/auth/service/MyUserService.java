@@ -4,6 +4,9 @@ import com.rysiki.yourshelfy.auth.dto.UserCredentialsDTO;
 import com.rysiki.yourshelfy.auth.entity.MyUser;
 import com.rysiki.yourshelfy.auth.repository.MyUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -13,13 +16,31 @@ import java.util.Optional;
 public class MyUserService {
 
     public static class UserAlreadyExistException extends Exception {
-        UserAlreadyExistException(String message) {
+        public UserAlreadyExistException(String message) {
             super(message);
         }
     }
 
     public static class WrongCredentialsException extends Exception {
-        WrongCredentialsException(String message) {
+        public WrongCredentialsException(String message) {
+            super(message);
+        }
+    }
+
+    public static class UserNotFound extends Exception {
+        public UserNotFound(String message) {
+            super(message);
+        }
+    }
+
+    public static class UserNotAuthenticated extends Exception {
+        public UserNotAuthenticated(String message) {
+            super(message);
+        }
+    }
+
+    public static class UserLackPermission extends Exception {
+        public UserLackPermission(String message) {
             super(message);
         }
     }
@@ -31,7 +52,7 @@ public class MyUserService {
     PasswordEncoder passwordEncoder;
 
 
-    public void register(UserCredentialsDTO userCredentialsDTO) throws UserAlreadyExistException, WrongCredentialsException {
+    public MyUser register(UserCredentialsDTO userCredentialsDTO) throws UserAlreadyExistException, WrongCredentialsException {
         if(userCredentialsDTO.getEmail() == null || userCredentialsDTO.getEmail().isBlank() || userCredentialsDTO.getPassword() == null || userCredentialsDTO.getPassword().isBlank()) {
             throw new WrongCredentialsException("Email and/or password are not set");
         }
@@ -46,7 +67,7 @@ public class MyUserService {
                 .enabled(true)
                 .build();
         user.setPassword(passwordEncoder.encode(userCredentialsDTO.getPassword()));
-        myUserRepository.save(user);
+        return myUserRepository.save(user);
     }
 
     public boolean checkIfUserExist(String email) {
@@ -55,5 +76,19 @@ public class MyUserService {
 
     public Optional<MyUser> getUserByEmail(String email) {
         return myUserRepository.findByEmail(email);
+    }
+
+    public MyUser getCurrentUser() throws UserNotFound, UserNotAuthenticated {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.isAuthenticated()) {
+            String email = ((User) authentication.getPrincipal()).getUsername();
+            Optional<MyUser> optionalMyUser = myUserRepository.findByEmail(email);
+            if(optionalMyUser.isPresent()) {
+                return optionalMyUser.get();
+            } else {
+                throw new UserNotFound("User not found");
+            }
+        }
+        throw new UserNotAuthenticated("User not authenticated");
     }
 }

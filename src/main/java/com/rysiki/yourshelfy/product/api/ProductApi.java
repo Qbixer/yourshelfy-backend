@@ -25,8 +25,4 @@ public class ProductApi {
         return ResponseEntity.ok(productService.getAllProductsDTO());
     }
 
-    @GetMapping("/categories")
-    ResponseEntity<Set<String>> getAllProductCategories() {
-        return ResponseEntity.ok(productService.getAllProductCategories());
-    }
 }

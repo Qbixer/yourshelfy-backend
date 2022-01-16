@@ -2,13 +2,11 @@ package com.rysiki.yourshelfy.product.service;
 
 import com.rysiki.yourshelfy.product.dto.ProductDTO;
 import com.rysiki.yourshelfy.product.entity.Product;
-import com.rysiki.yourshelfy.product.entity.ProductCategory;
-import com.rysiki.yourshelfy.product.repository.ProductCategoryRepository;
 import com.rysiki.yourshelfy.product.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -19,9 +17,6 @@ public class ProductService {
     @Autowired
     ProductRepository productRepository;
 
-    @Autowired
-    ProductCategoryRepository productCategoryRepository;
-
 
     public Set<ProductDTO> getAllProductsDTO() {
         return productRepository.findAll().stream().map(
@@ -29,14 +24,18 @@ public class ProductService {
                         .builder()
                         .id(x.getId())
                         .name(x.getName())
-                        .category(x.getCategory() != null ? x.getCategory().getName() : null)
                         .build()
         ).collect(Collectors.toSet());
     }
 
-    public Set<String> getAllProductCategories() {
-        return productCategoryRepository.findAll().stream().map(ProductCategory::getName).collect(Collectors.toSet());
+    public Product getOrCreateProduct(String name) {
+        Optional<Product> optionalProduct = productRepository.findByName(name);
+        if(optionalProduct.isPresent()) {
+            return optionalProduct.get();
+        } else {
+            Product product = new Product();
+            product.setName(name);
+            return productRepository.save(product);
+        }
     }
-
-
 }

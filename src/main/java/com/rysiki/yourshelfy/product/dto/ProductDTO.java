@@ -1,5 +1,6 @@
 package com.rysiki.yourshelfy.product.dto;
 
+import com.rysiki.yourshelfy.product.entity.Product;
 import lombok.Builder;
 import lombok.Data;
 
@@ -9,8 +10,11 @@ public class ProductDTO {
 
     Integer id;
     String name;
-    String category;
 
-    // Base64 representation of icon OR or just "url" (id) to this icon
-    String icon;
+    public static ProductDTO createProductDTOFromProduct(Product product) {
+        return ProductDTO.builder()
+                .id(product.getId())
+                .name(product.getName())
+                .build();
+    }
 }

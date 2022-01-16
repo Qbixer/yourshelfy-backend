@@ -1,8 +1,7 @@
 package com.rysiki.yourshelfy.shelf.entity;
 
-import com.rysiki.yourshelfy.commons.entity.Image;
+import com.rysiki.yourshelfy.auth.entity.MyUser;
 import com.rysiki.yourshelfy.product.entity.Product;
-import com.rysiki.yourshelfy.product.entity.ProductCategory;
 import lombok.*;
 
 import javax.persistence.*;
@@ -22,39 +21,23 @@ public class Shelf {
     @GeneratedValue(generator = "shelf_id_seq")
     Integer id;
 
-    @Column(nullable = false)
+    @Column
     String name;
 
-    @Column(nullable = false)
-    Integer ownerId;
+    @EqualsAndHashCode.Exclude
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_email")
+    MyUser owner;
+
+    @Column(name = "is_shopping_list")
+    Boolean isShoppingList;
+
+    @Column(name = "is_null_shelf")
+    Boolean isNullShelf;
 
     @EqualsAndHashCode.Exclude
-    @OneToMany(
-        mappedBy = "shelf",
-        cascade = CascadeType.ALL,
-        orphanRemoval = true
-    )
-    Set<ShelfProduct> products;
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "shelf", cascade = {CascadeType.ALL})
+    Set<Category> categories;
 
-    public void addNewProduct(Product product, Integer count) {
-        products.add(ShelfProduct.builder()
-                .shelf(this)
-                .product(product)
-                .count(count)
-                .build());
-    }
-
-    public void removeProduct(Product product) {
-        for (Iterator<ShelfProduct> iterator = products.iterator();
-             iterator.hasNext(); ) {
-            ShelfProduct shelfProduct = iterator.next();
-
-            if (shelfProduct.getShelf().equals(this) &&
-                    shelfProduct.getProduct().equals(product)) {
-                iterator.remove();
-                shelfProduct.setProduct(null);
-                shelfProduct.setShelf(null);
-            }
-        }
-    }
+    //TODO share shelf
 }

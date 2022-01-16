@@ -42,12 +42,7 @@ public class LoginApi {
             Optional<MyUser> myUserOptional = myUserService.getUserByEmail(emailAndPasswordCredentialDTO.getEmail());
             if(myUserOptional.isPresent()) {
                 MyUser myUser = myUserOptional.get();
-                return ResponseEntity.ok(UserProfileDTO.builder()
-                        .email(myUser.getEmail())
-                        .firstname(myUser.getFirstname())
-                        .surname(myUser.getSurname())
-                        .phone(myUser.getPhone())
-                        .build());
+                return ResponseEntity.ok(UserProfileDTO.createUserProfileDTOFromMyUser(myUser));
             }
         }
         return ResponseEntity.notFound().build();

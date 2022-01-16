@@ -1,6 +1,5 @@
 package com.rysiki.yourshelfy.product.entity;
 
-import com.rysiki.yourshelfy.commons.entity.Image;
 import lombok.*;
 
 import javax.persistence.*;
@@ -20,14 +19,4 @@ public class Product {
 
     @Column(unique = true)
     String name;
-
-    @EqualsAndHashCode.Exclude
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "icon_id")
-    Image icon;
-
-    @EqualsAndHashCode.Exclude
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "category")
-    ProductCategory category;
 }

@@ -11,20 +11,20 @@ import javax.persistence.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
-@Table(name = "shelf_product")
-public class ShelfProduct {
+@Table(name = "category_product")
+public class CategoryProduct {
 
     @EmbeddedId
-    ShelfProductId id;
+    CategoryProductId id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("shelfId")
-    Shelf shelf;
+    @MapsId("categoryId")
+    Category category;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("productId")
     Product product;
 
     @Column
-    Integer count;
+    Integer amount;
 }
