@@ -6,6 +6,7 @@ import com.rysiki.yourshelfy.shelf.dto.ShelfDTO;
 import com.rysiki.yourshelfy.shelf.entity.Shelf;
 import com.rysiki.yourshelfy.shelf.service.ShelfService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,47 +26,31 @@ public class ShelfApi {
     MyUserService myUserService;
 
     @GetMapping("")
-    ResponseEntity getAllUserShelves() {
-        try {
-            MyUser currentUser = myUserService.getCurrentUser();
-            Set<Shelf> shelves = shelfService.getAllUserShelves(currentUser);
-            return ResponseEntity.ok(shelves.stream().map(ShelfDTO::createShelfDTOFromShelf).collect(Collectors.toSet()));
-        } catch (MyUserService.UserNotFound | MyUserService.UserNotAuthenticated e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    Set<ShelfDTO> getAllUserShelves() {
+        MyUser currentUser = myUserService.getCurrentUser();
+        Set<Shelf> shelves = shelfService.getAllUserShelves(currentUser);
+        return shelves.stream().map(ShelfDTO::createShelfDTOFromShelf).collect(Collectors.toSet());
     }
 
     @PostMapping("create")
-    ResponseEntity createNewShelf(@RequestBody String name) {
-        try {
-            MyUser currentUser = myUserService.getCurrentUser();
-            Shelf newShelf = shelfService.createNewShelf(currentUser, name);
-            return ResponseEntity.ok(ShelfDTO.createShelfDTOFromShelf(newShelf));
-        } catch (MyUserService.UserNotFound | MyUserService.UserNotAuthenticated | ShelfService.BlankShelfNameException | ShelfService.ShelfWithTheSameNameException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    ShelfDTO createNewShelf(@RequestBody String name) {
+        MyUser currentUser = myUserService.getCurrentUser();
+        Shelf newShelf = shelfService.createNewShelf(currentUser, name);
+        return ShelfDTO.createShelfDTOFromShelf(newShelf);
     }
 
     @PutMapping("rename/{id}")
-    ResponseEntity renameShelf(@PathVariable Integer id, @RequestBody String name) {
-        try {
-            MyUser currentUser = myUserService.getCurrentUser();
-            Shelf shelf = shelfService.renameShelf(currentUser, id, name);
-            return ResponseEntity.ok(ShelfDTO.createShelfDTOFromShelf(shelf));
-        } catch (MyUserService.UserNotFound | MyUserService.UserNotAuthenticated | ShelfService.ShelfNotExists | ShelfService.BlankShelfNameException | MyUserService.UserLackPermission e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    ShelfDTO renameShelf(@PathVariable Integer id, @RequestBody String name) {
+        MyUser currentUser = myUserService.getCurrentUser();
+        Shelf shelf = shelfService.renameShelf(currentUser, id, name);
+        return ShelfDTO.createShelfDTOFromShelf(shelf);
     }
 
     @DeleteMapping("delete/{id}")
     ResponseEntity deleteShelf(@PathVariable Integer id) {
-        try {
-            MyUser currentUser = myUserService.getCurrentUser();
-            shelfService.deleteShelf(currentUser, id);
-            return ResponseEntity.ok().build();
-        } catch (MyUserService.UserNotFound | MyUserService.UserNotAuthenticated | ShelfService.ShelfNotExists | MyUserService.UserLackPermission e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        MyUser currentUser = myUserService.getCurrentUser();
+        shelfService.deleteShelf(currentUser, id);
+        return ResponseEntity.ok().build();
     }
 
 

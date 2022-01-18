@@ -15,31 +15,31 @@ import java.util.Optional;
 @Service
 public class MyUserService {
 
-    public static class UserAlreadyExistException extends Exception {
+    public static class UserAlreadyExistException extends RuntimeException {
         public UserAlreadyExistException(String message) {
             super(message);
         }
     }
 
-    public static class WrongCredentialsException extends Exception {
+    public static class WrongCredentialsException extends RuntimeException {
         public WrongCredentialsException(String message) {
             super(message);
         }
     }
 
-    public static class UserNotFound extends Exception {
+    public static class UserNotFound extends RuntimeException {
         public UserNotFound(String message) {
             super(message);
         }
     }
 
-    public static class UserNotAuthenticated extends Exception {
+    public static class UserNotAuthenticated extends RuntimeException {
         public UserNotAuthenticated(String message) {
             super(message);
         }
     }
 
-    public static class UserLackPermission extends Exception {
+    public static class UserLackPermission extends RuntimeException {
         public UserLackPermission(String message) {
             super(message);
         }
@@ -81,11 +81,15 @@ public class MyUserService {
     public MyUser getCurrentUser() throws UserNotFound, UserNotAuthenticated {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if(authentication.isAuthenticated()) {
-            String email = ((User) authentication.getPrincipal()).getUsername();
-            Optional<MyUser> optionalMyUser = myUserRepository.findByEmail(email);
-            if(optionalMyUser.isPresent()) {
-                return optionalMyUser.get();
-            } else {
+            try {
+                String email = ((User) authentication.getPrincipal()).getUsername();
+                Optional<MyUser> optionalMyUser = myUserRepository.findByEmail(email);
+                if (optionalMyUser.isPresent()) {
+                    return optionalMyUser.get();
+                } else {
+                    throw new UserNotFound("User not found");
+                }
+            } catch (Exception e) {
                 throw new UserNotFound("User not found");
             }
         }

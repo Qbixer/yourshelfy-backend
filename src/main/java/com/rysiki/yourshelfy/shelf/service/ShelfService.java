@@ -2,9 +2,6 @@ package com.rysiki.yourshelfy.shelf.service;
 
 import com.rysiki.yourshelfy.auth.entity.MyUser;
 import com.rysiki.yourshelfy.auth.service.MyUserService;
-import com.rysiki.yourshelfy.product.dto.ProductDTO;
-import com.rysiki.yourshelfy.product.entity.Product;
-import com.rysiki.yourshelfy.product.repository.ProductRepository;
 import com.rysiki.yourshelfy.shelf.entity.Shelf;
 import com.rysiki.yourshelfy.shelf.repository.ShelfRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,34 +9,36 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 public class ShelfService {
 
-    public static class BlankShelfNameException extends Exception {
+    public static class BlankShelfNameException extends RuntimeException {
         public BlankShelfNameException(String message) {
             super(message);
         }
     }
 
-    public static class ShelfWithTheSameNameException extends Exception {
+    public static class ShelfWithTheSameNameException extends RuntimeException {
         public ShelfWithTheSameNameException(String message) {
             super(message);
         }
     }
 
-    public static class ShelfNotExists extends Exception {
+    public static class ShelfNotExists extends RuntimeException {
         public ShelfNotExists(String message) {
+            super(message);
+        }
+    }
+
+    public static class DefaultShelfException extends RuntimeException {
+        public DefaultShelfException(String message) {
             super(message);
         }
     }
 
     @Autowired
     ShelfRepository shelfRepository;
-
-    @Autowired
-    MyUserService myUserService;
 
     public Set<Shelf> getAllUserShelves(MyUser currentUser) {
         return shelfRepository.findAllByOwner(currentUser);
@@ -58,7 +57,7 @@ public class ShelfService {
                 .build());
     }
 
-    public Shelf createNewShelf(MyUser currentUser, String name) throws BlankShelfNameException, ShelfWithTheSameNameException, MyUserService.UserNotAuthenticated {
+    public Shelf createNewShelf(MyUser currentUser, String name) {
         if(name == null || name.isBlank()) {
             throw new BlankShelfNameException("Blank shelf name");
         }
@@ -77,27 +76,34 @@ public class ShelfService {
                 .build());
     }
 
-    public Shelf renameShelf(MyUser currentUser, Integer shelfId, String newName) throws MyUserService.UserNotAuthenticated, BlankShelfNameException, ShelfNotExists, MyUserService.UserLackPermission {
+    public Shelf renameShelf(MyUser currentUser, Integer shelfId, String newName) {
         if(newName == null || newName.isBlank()) {
             throw new BlankShelfNameException("Blank shelf name");
         }
         if (currentUser == null) {
             throw new MyUserService.UserNotAuthenticated("User not authenticated");
         }
+        Optional<Shelf> optionalShelf = shelfRepository.findByOwnerAndName(currentUser, newName);
+        if(optionalShelf.isPresent()) {
+            throw new ShelfWithTheSameNameException("Shelf with this name already exist for this user");
+        }
         Shelf shelf = getUserShelf(currentUser, shelfId);
         shelf.setName(newName);
         return shelfRepository.save(shelf);
     }
 
-    public void deleteShelf(MyUser currentUser, Integer shelfId) throws MyUserService.UserNotAuthenticated, ShelfNotExists, MyUserService.UserLackPermission {
+    public void deleteShelf(MyUser currentUser, Integer shelfId) {
         if (currentUser == null) {
             throw new MyUserService.UserNotAuthenticated("User not authenticated");
         }
         Shelf shelf = getUserShelf(currentUser, shelfId);
+        if(shelf.getIsNullShelf() || shelf.getIsShoppingList()) {
+            throw new DefaultShelfException("Trying to delete default shelf");
+        }
         shelfRepository.delete(shelf);
     }
 
-    private Shelf getUserShelf(MyUser currentUser, Integer shelfId) throws ShelfNotExists, MyUserService.UserLackPermission {
+    private Shelf getUserShelf(MyUser currentUser, Integer shelfId) {
         Optional<Shelf> optionalShelf = shelfRepository.findById(shelfId);
         if(optionalShelf.isEmpty()) {
             throw new ShelfNotExists("Shelf not exists");
