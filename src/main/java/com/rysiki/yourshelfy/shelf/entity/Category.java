@@ -5,6 +5,7 @@ import lombok.*;
 
 import javax.persistence.*;
 import java.util.Iterator;
+import java.util.Optional;
 import java.util.Set;
 
 @Entity
@@ -38,6 +39,7 @@ public class Category {
 
     public void addNewProduct(Product product, Integer amount) {
         products.add(CategoryProduct.builder()
+                .id(new CategoryProductId(this.getId(),product.getId()))
                 .category(this)
                 .product(product)
                 .amount(amount)
@@ -56,5 +58,12 @@ public class Category {
                 categoryProduct.setCategory(null);
             }
         }
+    }
+
+    public Optional<CategoryProduct> findCategoryProduct(Product product) {
+        if(products == null) {
+            return Optional.empty();
+        }
+        return products.stream().filter(x -> x.product.equals(product)).findFirst();
     }
 }

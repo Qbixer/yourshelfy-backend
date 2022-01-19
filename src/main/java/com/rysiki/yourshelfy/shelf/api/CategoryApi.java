@@ -2,10 +2,9 @@ package com.rysiki.yourshelfy.shelf.api;
 
 import com.rysiki.yourshelfy.auth.entity.MyUser;
 import com.rysiki.yourshelfy.auth.service.MyUserService;
-import com.rysiki.yourshelfy.shelf.dto.CategoryDTO;
-import com.rysiki.yourshelfy.shelf.dto.CreateNewCategoryInputDTO;
-import com.rysiki.yourshelfy.shelf.dto.ShelfDTO;
+import com.rysiki.yourshelfy.shelf.dto.*;
 import com.rysiki.yourshelfy.shelf.entity.Category;
+import com.rysiki.yourshelfy.shelf.entity.CategoryProduct;
 import com.rysiki.yourshelfy.shelf.entity.Shelf;
 import com.rysiki.yourshelfy.shelf.service.CategoryService;
 import com.rysiki.yourshelfy.shelf.service.ShelfService;
@@ -42,5 +41,26 @@ public class CategoryApi {
         MyUser currentUser = myUserService.getCurrentUser();
         categoryService.deleteCategory(currentUser, id);
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("addProduct/{categoryId}")
+    CategoryProductDTO addNewProductToShelf(@PathVariable Integer categoryId, @RequestBody String productName) {
+        MyUser currentUser = myUserService.getCurrentUser();
+        CategoryProduct categoryProduct = categoryService.addNewProductToCategory(currentUser, categoryId, productName, 0);
+        return CategoryProductDTO.createCategoryProductDTOFromCategoryProduct(categoryProduct);
+    }
+
+    @DeleteMapping("deleteProduct/{categoryId}")
+    ResponseEntity addNewProductToShelf(@PathVariable Integer categoryId, @RequestBody Integer productId) {
+        MyUser currentUser = myUserService.getCurrentUser();
+        categoryService.deleteCategoryProduct(currentUser, categoryId, productId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("changeProductAmount/{categoryId}")
+    CategoryProductDTO changeAmountOfCategoryProduct(@PathVariable Integer categoryId, @RequestBody ProductDeltaInputDTO productDeltaInputDTO) {
+        MyUser currentUser = myUserService.getCurrentUser();
+        CategoryProduct categoryProduct = categoryService.changeAmountOfCategoryProduct(currentUser, categoryId, productDeltaInputDTO.getProductId(), productDeltaInputDTO.getDelta());
+        return CategoryProductDTO.createCategoryProductDTOFromCategoryProduct(categoryProduct);
     }
 }

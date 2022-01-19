@@ -15,8 +15,6 @@ import java.util.Set;
 @RestController
 public class ProductApi {
 
-    //TODO add CREATE,UPDATE,DELETE for admin (add role admin first)
-
     @Autowired
     ProductService productService;
 

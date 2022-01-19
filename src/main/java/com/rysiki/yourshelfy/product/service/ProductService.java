@@ -13,6 +13,17 @@ import java.util.stream.Collectors;
 @Service
 public class ProductService {
 
+    public static class BlankProductNameException extends RuntimeException {
+        public BlankProductNameException(String message) {
+            super(message);
+        }
+    }
+
+    public static class ProductNotExists extends RuntimeException {
+        public ProductNotExists(String message) {
+            super(message);
+        }
+    }
 
     @Autowired
     ProductRepository productRepository;
@@ -29,6 +40,10 @@ public class ProductService {
     }
 
     public Product getOrCreateProduct(String name) {
+        if(name == null || name.isBlank()) {
+            throw new BlankProductNameException("Blank product name");
+        }
+        name = name.substring(0,1).toUpperCase().concat(name.substring(1).toLowerCase());
         Optional<Product> optionalProduct = productRepository.findByName(name);
         if(optionalProduct.isPresent()) {
             return optionalProduct.get();
