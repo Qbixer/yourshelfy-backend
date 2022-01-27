@@ -13,4 +13,6 @@ public interface ShelfRepository extends JpaRepository<Shelf,Integer> {
     Set<Shelf> findAllByOwner(MyUser myUser);
 
     Optional<Shelf> findByOwnerAndName(MyUser myUser, String name);
+
+    Optional<Shelf> findByOwnerAndIsShoppingList(MyUser myUser, Boolean isShoppingList);
 }

@@ -14,6 +14,7 @@ import com.rysiki.yourshelfy.shelf.repository.ShelfRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.Optional;
 
 @Service
@@ -135,16 +136,8 @@ public class CategoryService {
             throw new MyUserService.UserNotAuthenticated("User not authenticated");
         }
         Category category = getUserCategory(currentUser, categoryId);
-        Optional<Product> optionalProduct = productRepository.findById(productId);
-        if(optionalProduct.isEmpty()) {
-            throw new ProductService.ProductNotExists("Product not exists");
-        }
-        Product product = optionalProduct.get();
-        Optional<CategoryProduct> optionalCategoryProduct = category.findCategoryProduct(product);
-        if(optionalCategoryProduct.isEmpty()) {
-            throw new ProductNotExistsInThisCategory("Product not exists in this category");
-        }
-        category.removeProduct(product);
+        CategoryProduct categoryProduct = getCategoryProduct(category, productId);
+        category.removeProduct(categoryProduct.getProduct());
         categoryRepository.save(category);
     }
 
@@ -153,6 +146,61 @@ public class CategoryService {
             throw new MyUserService.UserNotAuthenticated("User not authenticated");
         }
         Category category = getUserCategory(currentUser, categoryId);
+        CategoryProduct categoryProduct = getCategoryProduct(category, productId);
+        Integer amount = categoryProduct.getAmount();
+        amount += delta;
+        if(amount < 0) {
+            amount = 0;
+        }
+        categoryProduct.setAmount(amount);
+        categoryRepository.save(category);
+        Optional<CategoryProduct> optionalCategoryProduct = category.findCategoryProduct(categoryProduct.getProduct());
+        if(optionalCategoryProduct.isEmpty()) {
+            throw new ProductNotExistsInThisCategory("Something went wrong");
+        }
+        return optionalCategoryProduct.get();
+    }
+
+    public CategoryProduct changeNameOfCategoryProduct(MyUser currentUser, Integer categoryId, Integer productId, String newName) {
+        if (currentUser == null) {
+            throw new MyUserService.UserNotAuthenticated("User not authenticated");
+        }
+        Category category = getUserCategory(currentUser, categoryId);
+        Product newProduct = productService.getOrCreateProduct(newName);
+        Optional<CategoryProduct> optionalCategoryProduct = category.findCategoryProduct(newProduct);
+        if(optionalCategoryProduct.isPresent()) {
+            throw new ProductAlreadyExistsInThisCategory("Product already exists in this category");
+        }
+        CategoryProduct categoryProduct = getCategoryProduct(category, productId);
+        category.replaceProduct(categoryProduct.getProduct(),newProduct);
+        category = categoryRepository.save(category);
+        optionalCategoryProduct = category.findCategoryProduct(newProduct);
+        if(optionalCategoryProduct.isEmpty()) {
+            throw new ProductNotExistsInThisCategory("Something went wrong");
+        }
+        return optionalCategoryProduct.get();
+    }
+
+    public Category addNewProductToShoppingList(MyUser currentUser, String categoryName, Integer productId, Integer amount) {
+        if (currentUser == null) {
+            throw new MyUserService.UserNotAuthenticated("User not authenticated");
+        }
+        Optional<Shelf> byOwnerAndIsShoppingList = shelfRepository.findByOwnerAndIsShoppingList(currentUser, true);
+        if(byOwnerAndIsShoppingList.isEmpty()) {
+            throw new ShelfService.DefaultShelfException("Something went wrong");
+        }
+        Shelf shelf = byOwnerAndIsShoppingList.get();
+        Category category = getOrCreateCategory(shelf, categoryName);
+        Product product = productRepository.getById(productId);
+        Optional<CategoryProduct> optionalCategoryProduct = category.findCategoryProduct(product);
+        if(optionalCategoryProduct.isPresent()) {
+            throw new ProductAlreadyExistsInThisCategory("Product already exists in this category");
+        }
+        category.addNewProduct(product,amount);
+        return categoryRepository.save(category);
+    }
+
+    private CategoryProduct getCategoryProduct(Category category, Integer productId) {
         Optional<Product> optionalProduct = productRepository.findById(productId);
         if(optionalProduct.isEmpty()) {
             throw new ProductService.ProductNotExists("Product not exists");
@@ -161,18 +209,6 @@ public class CategoryService {
         Optional<CategoryProduct> optionalCategoryProduct = category.findCategoryProduct(product);
         if(optionalCategoryProduct.isEmpty()) {
             throw new ProductNotExistsInThisCategory("Product not exists in this category");
-        }
-        CategoryProduct categoryProduct = optionalCategoryProduct.get();
-        Integer amount = categoryProduct.getAmount();
-        amount += delta;
-        if(amount < 0) {
-            amount = 0;
-        }
-        categoryProduct.setAmount(amount);
-        categoryRepository.save(category);
-        optionalCategoryProduct = category.findCategoryProduct(product);
-        if(optionalCategoryProduct.isEmpty()) {
-            throw new ProductNotExistsInThisCategory("Something went wrong");
         }
         return optionalCategoryProduct.get();
     }
@@ -189,5 +225,20 @@ public class CategoryService {
         return category;
     }
 
+    private Category getOrCreateCategory(Shelf shelf, String categoryName) {
+        if(categoryName == null || categoryName.isBlank()) {
+            throw new BlankCategoryNameException("Blank category name");
+        }
+        Optional<Category> byShelfAndName = categoryRepository.findByShelfAndName(shelf, categoryName);
+        if(byShelfAndName.isPresent()) {
+            return byShelfAndName.get();
+        }
+        Category category = Category.builder()
+                .name(categoryName)
+                .shelf(shelf)
+                .products(new HashSet<>())
+                .build();
+        return categoryRepository.save(category);
+    }
 
 }

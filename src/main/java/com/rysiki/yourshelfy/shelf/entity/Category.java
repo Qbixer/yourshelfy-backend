@@ -60,6 +60,24 @@ public class Category {
         }
     }
 
+    public void replaceProduct(Product oldProduct, Product newProduct) {
+        Integer oldAmount = 0;
+        for (Iterator<CategoryProduct> iterator = products.iterator();
+             iterator.hasNext(); ) {
+            CategoryProduct categoryProduct = iterator.next();
+
+            if (categoryProduct.getCategory().equals(this) &&
+                    categoryProduct.getProduct().equals(oldProduct)) {
+                iterator.remove();
+                oldAmount = categoryProduct.getAmount();
+                categoryProduct.setProduct(null);
+                categoryProduct.setCategory(null);
+
+            }
+        }
+        addNewProduct(newProduct,oldAmount);
+    }
+
     public Optional<CategoryProduct> findCategoryProduct(Product product) {
         if(products == null) {
             return Optional.empty();

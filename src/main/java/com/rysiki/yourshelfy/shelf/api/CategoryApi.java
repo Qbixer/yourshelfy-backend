@@ -43,24 +43,39 @@ public class CategoryApi {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("addProduct/{categoryId}")
+    @PostMapping("{categoryId}/addProduct")
     CategoryProductDTO addNewProductToShelf(@PathVariable Integer categoryId, @RequestBody String productName) {
         MyUser currentUser = myUserService.getCurrentUser();
         CategoryProduct categoryProduct = categoryService.addNewProductToCategory(currentUser, categoryId, productName, 0);
         return CategoryProductDTO.createCategoryProductDTOFromCategoryProduct(categoryProduct);
     }
 
-    @DeleteMapping("deleteProduct/{categoryId}")
-    ResponseEntity addNewProductToShelf(@PathVariable Integer categoryId, @RequestBody Integer productId) {
+    @DeleteMapping("{categoryId}/deleteProduct/{productId}")
+    ResponseEntity addNewProductToShelf(@PathVariable Integer categoryId, @PathVariable Integer productId) {
         MyUser currentUser = myUserService.getCurrentUser();
         categoryService.deleteCategoryProduct(currentUser, categoryId, productId);
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping("changeProductAmount/{categoryId}")
+    @PutMapping("{categoryId}/changeProductAmount")
     CategoryProductDTO changeAmountOfCategoryProduct(@PathVariable Integer categoryId, @RequestBody ProductDeltaInputDTO productDeltaInputDTO) {
         MyUser currentUser = myUserService.getCurrentUser();
         CategoryProduct categoryProduct = categoryService.changeAmountOfCategoryProduct(currentUser, categoryId, productDeltaInputDTO.getProductId(), productDeltaInputDTO.getDelta());
         return CategoryProductDTO.createCategoryProductDTOFromCategoryProduct(categoryProduct);
     }
+
+    @PutMapping("{categoryId}/changeProductName")
+    CategoryProductDTO changeNameOfCategoryProduct(@PathVariable Integer categoryId, @RequestBody ProductChangeNameInputDTO productChangeNameInputDTO) {
+        MyUser currentUser = myUserService.getCurrentUser();
+        CategoryProduct categoryProduct = categoryService.changeNameOfCategoryProduct(currentUser, categoryId, productChangeNameInputDTO.getProductId(), productChangeNameInputDTO.getNewName());
+        return CategoryProductDTO.createCategoryProductDTOFromCategoryProduct(categoryProduct);
+    }
+
+    @PostMapping("addProductToShoppingList")
+    CategoryDTO addProductToShoppingList(@RequestBody AddProductToShoppingListInputDTO addProductToShoppingListInputDTO) {
+        MyUser currentUser = myUserService.getCurrentUser();
+        Category category = categoryService.addNewProductToShoppingList(currentUser, addProductToShoppingListInputDTO.getCategoryName(), addProductToShoppingListInputDTO.getProductId(), addProductToShoppingListInputDTO.getAmount());
+        return CategoryDTO.createCategoryDTOFromCategory(category);
+    }
+
 }

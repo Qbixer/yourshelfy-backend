@@ -17,10 +17,12 @@ public class CategoryProduct {
     @EmbeddedId
     CategoryProductId id;
 
+    @EqualsAndHashCode.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("categoryId")
     Category category;
 
+    @EqualsAndHashCode.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("productId")
     Product product;
